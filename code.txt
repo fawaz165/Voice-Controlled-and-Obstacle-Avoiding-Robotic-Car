@@ -1,0 +1,154 @@
+#include <AFMotor.h> // Adafruit Motor Shield Library. First you must download and install AFMotor library
+#include <Servo.h> // Servo library
+
+AF_DCMotor motor1(1, MOTOR12_1KHZ); // Create motor #1 using M1 output on Motor Drive Shield, set to 1kHz PWM frequency
+AF_DCMotor motor2(2, MOTOR12_1KHZ); // Create motor #2 using M2 output on Motor Drive Shield, set to 1kHz PWM frequency
+Servo ultrasonicServo; // Define servo name for ultrasonic sensor
+
+#define TRIGGER_PIN A1 // Arduino pin connected to the trigger pin of ultrasonic sensor
+#define ECHO_PIN A2 // Arduino pin connected to the echo pin of ultrasonic sensor
+#define SERVO_PIN A0 // Arduino pin connected to the servo motor
+
+String voiceCommand; // Variable to store received voice command
+
+void setup() {
+  Serial.begin(9600); // Start serial communication for debugging
+  Serial.println("Bluetooth Car Control");
+  pinMode(TRIGGER_PIN, OUTPUT);
+  ultrasonicServo.attach(SERVO_PIN); // Attach the servo to the designated pin
+}
+
+void loop() {
+  // Check for voice commands from Bluetooth
+  if (Serial.available() > 0) {
+    voiceCommand = Serial.readStringUntil('\n'); // Read the voice command until newline character
+    handleVoiceCommand(voiceCommand); // Process the received voice command
+  }
+  // Continuously check for obstacles
+  if (checkObstacle()) {
+    // If obstacle detected, scan left and right
+    scanLeft();
+    //scanRight();
+  }
+}
+
+void handleVoiceCommand(String command) {
+  Serial.print("Received voice command: ");
+  Serial.println(command);
+  if (command == "move forward") {
+    if (!checkObstacle()) { // Check for obstacle before moving forward
+      moveForward();
+    }
+  } else if (command == "move back") {
+    moveBackward();
+  } else if (command == "turn left") {
+    turnRight();
+  } else if (command == "turn right") {
+    turnLeft();
+  } else if (command == "stop") {
+    stopMoving();
+  }
+}
+
+bool checkObstacle() {
+  digitalWrite(TRIGGER_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER_PIN, LOW);
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  long distance = (duration * 0.034 / 2);
+  Serial.print("Distance: ");
+  Serial.println(distance);
+  // Adjust the threshold distance according to your setup
+  if (distance < 15) { // If distance less than 20cm, consider it an obstacle
+    Serial.println("Obstacle detected in front!");
+    return true;
+  }
+  return false;
+}
+
+void moveForward() {
+  motor1.run(FORWARD); // Run motor1 forward
+  motor1.setSpeed(200); // Set speed of motor1 (adjust as needed)
+  motor2.run(FORWARD); // Run motor2 forward
+  motor2.setSpeed(200); // Set speed of motor2 (adjust as needed)
+  // No delay here to allow continuous checking for obstacles while moving
+}
+
+void moveBackward() {
+  motor1.run(BACKWARD); // Run motor1 backward
+  motor1.setSpeed(200); // Set speed of motor1 (adjust as needed)
+  motor2.run(BACKWARD); // Run motor2 backward
+  motor2.setSpeed(200); // Set speed of motor2 (adjust as needed)
+  //delay(5000); // Move backward for 5 seconds (adjust as needed)
+  //sstopMoving(); // Stop moving after 5 seconds
+}
+
+void turnLeft() {
+  Serial.println("right");
+  motor1.run(BACKWARD); // Run motor1 backward
+  motor1.setSpeed(200); // Set speed of motor1 (adjust as needed)
+  motor2.run(FORWARD); // Run motor2 forward
+  motor2.setSpeed(200); // Set speed of motor2 (adjust as needed)
+  delay(3250); // Turn left for approximately 90 degrees (adjust as needed)
+  moveForward(); // Stop moving after turning
+}
+
+void turnRight() {
+  Serial.println("left");
+  motor1.run(FORWARD); // Run motor1 forward
+  motor1.setSpeed(200); // Set speed of motor1 (adjust as needed)
+  motor2.run(BACKWARD); // Run motor2 backward
+  motor2.setSpeed(200); // Set speed of motor2 (adjust as needed)
+  delay(3250); // Turn right for approximately 90 degrees (adjust as needed)
+  //stopMoving(); // Stop moving after turning
+  moveForward();
+}
+
+void stopMoving() {
+  motor1.run(RELEASE); // Stop motor1
+  motor2.run(RELEASE); // Stop motor2
+}
+
+void scanLeft() {
+  int originalPosition = ultrasonicServo.read(); // Store the original position
+  ultrasonicServo.write(0); // Rotate servo to the leftmost position
+  delay(500); // Wait for servo to reach position (adjust as needed)
+  ultrasonicServo.write(originalPosition);
+  delay(100);
+  if (checkObstacle()) { // Check for obstacle on the left
+    Serial.println("Obstacle detected on the right!");
+    // Handle obstacle on the left (e.g., turn right)
+    ultrasonicServo.write(180);
+    delay(500);
+    if(checkObstacle()){
+      ultrasonicServo.write(originalPosition);
+      Serial.println("back");
+      moveBackward();   
+    }else{
+      ultrasonicServo.write(originalPosition);
+      Serial.println("left");
+      turnRight();
+    }  
+  } else {
+    // If no obstacle detected, return servo to original position
+    ultrasonicServo.write(originalPosition);
+    delay(500); // Wait for servo to reach original position (adjust as needed)
+    turnLeft();
+    Serial.println("Obstacle detected on the left!");
+  }
+}
+
+void scanRight() {
+  ultrasonicServo.write(180); // Rotate servo to the rightmost position
+  delay(500); // Wait for servo to reach position (adjust as needed)
+  if (checkObstacle()) { // Check for obstacle on the right
+    Serial.println("Obstacle detected on the right!");
+    // Handle obstacle on the right (e.g., turn left)
+    turnLeft();
+  }else{
+    turnRight();   
+  }
+  ultrasonicServo.write(90); // Reset servo to the center position  
+}
