@@ -3,7 +3,7 @@
 ## Project Description
 This project focuses on designing and developing a robotic car that integrates voice recognition and obstacle detection capabilities. Users can control the car's movements (forward, backward, left, right, and stop) using voice commands transmitted via a smartphone app. Additionally, the car autonomously detects and avoids obstacles using ultrasonic sensors.
 
-![Architecture Diagram](https://github.com/fawaz165/Voice-Controlled-and-Obstacle-Avoiding-Robotic-Car/blob/main/images/architecture.png)
+##![Architecture Diagram](https://github.com/fawaz165/Voice-Controlled-and-Obstacle-Avoiding-Robotic-Car/blob/main/images/architecture.png)
 
 ---
 
