@@ -58,7 +58,7 @@ This project focuses on designing and developing a robotic car that integrates v
    - Use MIT App Inventor to create the Android application.
    - Ensure the app supports Google speech recognition and Bluetooth communication.
    - Pair your smartphone with the HC-05 module.
-![Mobile App](https://github.com/fawaz165/Voice-Controlled-and-Obstacle-Avoiding-Robotic-Car/blob/main/images/bluethooth%20app.jpg)
+![Mobile App](https://github.com/fawaz165/Voice-Controlled-and-Obstacle-Avoiding-Robotic-Car/blob/main/images/bluetooth%20app.jpg)
 
 3. **Hardware Assembly**:
    - Connect the HC-05 Bluetooth module, ultrasonic sensors, and motor driver to the Arduino Uno.
